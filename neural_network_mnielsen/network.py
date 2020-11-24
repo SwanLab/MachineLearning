@@ -19,6 +19,8 @@ import random
 # Third-party libraries
 import numpy as np
 
+from time import time
+
 class Network(object):
 
     def __init__(self, sizes):
@@ -54,15 +56,20 @@ class Network(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
+        
+        t_0 = time()
+        time_vector = []
 
         training_data = list(training_data)
         n = len(training_data)
+        accuracy = []
 
         if test_data:
             test_data = list(test_data)
             n_test = len(test_data)
 
         for j in range(epochs):
+            t_e = time()
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k:k+mini_batch_size]
@@ -70,9 +77,28 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
-                print("Epoch {} : {} / {}".format(j,self.evaluate(test_data),n_test));
+                n_success = self.evaluate(test_data)
+                epoch_accuracy = n_success/n_test
+                accuracy.append(epoch_accuracy)
+                t = time()-t_e
+                time_vector.append(time()-t_0)
+                print(f"Epoch {j} : {n_success} / {n_test}. Elapsed time: {round(t,2)}s");
             else:
                 print("Epoch {} complete".format(j))
+        
+        t1 = time()
+        self.__accuracy = accuracy
+        self.__time_vector = time_vector
+        self.__total_time = t1-t_0
+    
+    def get_accuracy(self):
+        return self.__accuracy
+    
+    def get_time_vector(self):
+        return self.__time_vector
+    
+    def get_total_time(self):
+        return self.__total_time
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
